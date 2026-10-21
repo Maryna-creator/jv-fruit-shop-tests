@@ -2,16 +2,20 @@ package core.basesyntax.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import core.basesyntax.service.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class FileReaderImplTest {
-    private final FileReader fileReader = new FileReaderImpl();
+    private FileReader fileReader;
+
+    @BeforeEach
+    void beforeEach() {
+        fileReader = new FileReaderImpl();
+    }
 
     @Test
     void reader_fileName_null_NotOk() {
@@ -28,19 +32,28 @@ class FileReaderImplTest {
     @Test
     void reader_file_notExist_NotOk() {
         assertThrows(RuntimeException.class,
-                () -> fileReader.read("nonexistent.txt"));
+                () -> fileReader.read("nonexistent.csv"));
     }
 
     @Test
-    void reader_validFile_Ok() throws IOException {
-        Path tempFile = Files.createTempFile("test", ".csv");
-        Files.write(tempFile, List.of("line1", "line2"));
+    void reader_onlyHeader_Ok() {
+        String filePath = "src/test/resourсes/testTitle.csv";
+        List<String> lines = fileReader.read(filePath);
+        assertEquals(1, lines.size());
+    }
 
-        List<String> result = fileReader.read(tempFile.toString());
+    @Test
+    void reader_emptyFile_Ok() {
+        String filePath = "src/test/resourсes/empty_test.csv";
+        List<String> lines = fileReader.read(filePath);
+        assertTrue(lines.isEmpty());
+    }
 
-        assertEquals(2, result.size());
-        assertEquals("line1", result.get(0));
-
-        Files.delete(tempFile);
+    @Test
+    void reader_validFile_Ok() {
+        String filePath = "src/test/resourсes/testInput.csv";
+        List<String> lines = fileReader.read(filePath);
+        assertEquals(9, lines.size());
+        assertEquals("type,fruit,quantity", lines.get(0));
     }
 }

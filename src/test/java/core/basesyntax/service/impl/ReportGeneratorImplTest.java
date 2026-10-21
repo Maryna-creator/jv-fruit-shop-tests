@@ -6,11 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import core.basesyntax.db.Storage;
 import core.basesyntax.service.ReportGenerator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ReportGeneratorImplTest {
-    private final ReportGenerator reportGenerator = new ReportGeneratorImpl();
-    private final Storage storage = new Storage();
+    private ReportGenerator reportGenerator;
+    private Storage storage;
+
+    @BeforeEach
+    void beforeEach() {
+        reportGenerator = new ReportGeneratorImpl();
+        storage = new Storage();
+    }
 
     @Test
     void getReport_storage_IsEmpty_Ok() {

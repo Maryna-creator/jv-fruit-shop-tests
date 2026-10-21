@@ -17,14 +17,33 @@ import core.basesyntax.strategy.SupplyOperation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ShopServiceImplTest {
-    private final Storage storage = new Storage();
+    private Storage storage;
+    private ShopService shopService;
+
+    @BeforeEach
+    void beforeEach() {
+        storage = new Storage();
+        Map<Operation, OperationHandler> handlers = new HashMap<>();
+        handlers.put(Operation.BALANCE, new BalanceOperation());
+        handlers.put(Operation.PURCHASE, new PurchaseOperation());
+        handlers.put(Operation.SUPPLY, new SupplyOperation());
+        handlers.put(Operation.RETURN, new ReturnOperation());
+        OperationStrategy operationStrategy = new OperationStrategyImpl(handlers);
+        shopService = new ShopServiceImpl(operationStrategy, storage);
+    }
+
+    @AfterEach
+    void clean_up() {
+        storage.getAll().clear();
+    }
 
     @Test
     void process_emptyList_Ok() {
-        ShopService shopService = createShopService();
         shopService.process(List.of());
         assertTrue(storage.getAll().isEmpty());
 
@@ -32,7 +51,6 @@ class ShopServiceImplTest {
 
     @Test
     void process_multipleTransactions_Ok() {
-        ShopService shopService = createShopService();
         List<FruitTransaction> transactions = List.of(
                 createTransaction(Operation.BALANCE, "banana", 100),
                 createTransaction(Operation.PURCHASE, "banana", 30),
@@ -41,24 +59,11 @@ class ShopServiceImplTest {
         shopService.process(transactions);
         assertEquals(70, storage.getAll().get("banana"));
         assertEquals(50, storage.getAll().get("apple"));
-
     }
 
     @Test
     void process_nullList_throwsNpe() {
-        ShopService shopService = createShopService();
         assertThrows(NullPointerException.class, () -> shopService.process(null));
-    }
-
-    private ShopService createShopService() {
-        Map<Operation, OperationHandler> handlers = new HashMap<>();
-        handlers.put(Operation.BALANCE, new BalanceOperation());
-        handlers.put(Operation.PURCHASE, new PurchaseOperation());
-        handlers.put(Operation.SUPPLY, new SupplyOperation());
-        handlers.put(Operation.RETURN, new ReturnOperation());
-
-        OperationStrategy operationStrategy = new OperationStrategyImpl(handlers);
-        return new ShopServiceImpl(operationStrategy, storage);
     }
 
     private FruitTransaction createTransaction(Operation operation, String fruit, int quantity) {
